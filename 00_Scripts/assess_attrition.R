@@ -54,12 +54,9 @@ calculate_attrition_cost <- function(
 # Function to convert counts to percentages. Works well with dplyr::count()
 count_to_pct <- function(data, ..., col = n) {
     
-    grouping_vars_expr <- quos(...)
-    col_expr <- enquo(col)
-    
-    ret <- data %>%
-        group_by(!!! grouping_vars_expr) %>%
-        mutate(pct = (!! col_expr) / sum(!! col_expr)) %>%
+    ret <- data %>% 
+        group_by(...) %>% 
+        mutate(pct = {{ col }} / sum({{ col }})) %>% 
         ungroup()
     
     return(ret)
@@ -69,17 +66,10 @@ count_to_pct <- function(data, ..., col = n) {
 # Function to assess attrition versus a baseline
 assess_attrition <- function(data, attrition_col, attrition_value, baseline_pct) {
     
-    attrition_col_expr <- enquo(attrition_col)
-    
     data %>% 
-        filter((!! attrition_col_expr) %in% attrition_value) %>%
-        arrange(desc(pct)) %>%
-        mutate(
-            above_industry_avg = case_when(
-                pct > baseline_pct ~ "Yes",
-                TRUE ~ "No"
-            )
-        )
+        filter({{ attrition_col }} %in% attrition_value) %>% 
+        arrange(desc(pct)) %>% 
+        mutate(above_industry_avg = case_when(pct > baseline_pct ~ "Yes", TRUE ~ "No"))
     
 }
 
